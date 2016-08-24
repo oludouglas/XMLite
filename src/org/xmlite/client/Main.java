@@ -35,6 +35,7 @@ public class Main {
 
 			// System.out.println(client.getComposedXMLBody());
 			System.out.println(client.getResponse().asJson());
+			client.getResponse().asJson();
 
 		} catch (IOException e) {
 			e.printStackTrace();
