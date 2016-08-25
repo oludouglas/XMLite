@@ -1,5 +1,5 @@
 # XMLite
-This project aims to build a simple light weight XML library to handle XML generation, Serialization, De-serialization and maybe even XML to File, XML over HTTP, XML to JSON, XML to Objects and back
+This project aims to build a simple light weight XML library to handle XML generation, Serialization, De-serialization and maybe even XML to File, XML over HTTP, XML to JSON, XML to POJOs and back. Currently supports SOAP and XML OVER HTTP based requests and does not have any dependancies. just a single jar. 
 
 Here's a sample request to query a Dot Net webservice. 
 
