@@ -2,7 +2,6 @@ package org.xmlite.client;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
@@ -53,31 +52,62 @@ public class XMLite implements AutoCloseable {
 		try {
 			docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 			doc = docBuilder.newDocument();
-			Element rootElement = doc.createElement("soap:Envelope");
+			Element rootElement = null;
+
+			if (!xmlBuilder.isDotNet)
+				rootElement = doc.createElement("v:Envelope");
+			else
+				rootElement = doc.createElement("soap:Envelope");
+
 			doc.appendChild(rootElement);
 
 			switch (xmlBuilder.SOAP_VERSION) {
 			case VER_10:
-				rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-				rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
-				rootElement.setAttribute("xmlns:soap", "http://schemas.xmlsoap.org/soap/envelope/");
-				bodyElement = doc.createElement("soap:Body");
-				rootElement.appendChild(bodyElement);
-
+				if (!xmlBuilder.isDotNet) {
+					rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/1999/XMLSchema-instance");
+					rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+					rootElement.setAttribute("xmlns:soap", "http://schemas.xmlsoap.org/soap/envelope/");
+					bodyElement = doc.createElement("soap:Body");
+					rootElement.appendChild(bodyElement);
+				} else {
+					rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/1999/XMLSchema-instance");
+					rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+					rootElement.setAttribute("xmlns:soap", "http://schemas.xmlsoap.org/soap/envelope/");
+					bodyElement = doc.createElement("soap:Body");
+					rootElement.appendChild(bodyElement);
+				}
 				break;
 			case VER_11:
-				rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-				rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
-				rootElement.setAttribute("xmlns:soap", "http://schemas.xmlsoap.org/soap/envelope/");
-				bodyElement = doc.createElement("soap:Body");
-				rootElement.appendChild(bodyElement);
+				if (!xmlBuilder.isDotNet) {
+					rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+					rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/1999/XMLSchema");
+					rootElement.setAttribute("xmlns:soap", "http://schemas.xmlsoap.org/soap/envelope/");
+					bodyElement = doc.createElement("soap:Body");
+					rootElement.appendChild(bodyElement);
+				} else {
+					rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+					rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/1999/XMLSchema");
+					rootElement.setAttribute("xmlns:soap", "http://schemas.xmlsoap.org/soap/envelope/");
+					bodyElement = doc.createElement("soap:Body");
+					rootElement.appendChild(bodyElement);
+				}
 				break;
 			case VER_12:
-				rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-				rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
-				rootElement.setAttribute("xmlns:soap", "http://www.w3.org/2003/05/soap-envelope");
-				bodyElement = doc.createElement("soap:Body");
-				rootElement.appendChild(bodyElement);
+				if (!xmlBuilder.isDotNet) {
+					rootElement.setAttribute("xmlns:i", "http://www.w3.org/2001/XMLSchema-instance");
+					rootElement.setAttribute("xmlns:d", "http://www.w3.org/2001/XMLSchema");
+					rootElement.setAttribute("xmlns:c", "http://www.w3.org/2003/05/soap-encoding");
+					rootElement.setAttribute("xmlns:v", "http://www.w3.org/2003/05/soap-envelope");
+					rootElement.appendChild(doc.createElement("v:Header"));
+					bodyElement = doc.createElement("v:Body");
+					rootElement.appendChild(bodyElement);
+				} else {
+					rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+					rootElement.setAttribute("xmlns:xsd", "http://www.w3.org/2001/XMLSchema");
+					rootElement.setAttribute("xmlns:soap", "http://www.w3.org/2003/05/soap-envelope");
+					bodyElement = doc.createElement("soap:Body");
+					rootElement.appendChild(bodyElement);
+				}
 				break;
 			default:
 				rootElement.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
@@ -124,9 +154,16 @@ public class XMLite implements AutoCloseable {
 	private void buildXmlTree(boolean isDotNet) {
 
 		try {
-			Element methodElement = doc.createElement(method);
-			if (isDotNet)
+			Element methodElement = null;
+
+			if (isDotNet) {
+				methodElement = doc.createElement(method);
 				methodElement.setAttribute("xmlns", namespace);
+			} else {
+				methodElement = doc.createElement("n0:" + method);
+				methodElement.setAttribute("xmlns:n0", namespace);
+			}
+
 			bodyElement.appendChild(methodElement);
 
 			for (Entry<String, Object> entry : params.entrySet()) {
@@ -166,7 +203,7 @@ public class XMLite implements AutoCloseable {
 		return this.params;
 	}
 
-	static class Builder {
+	public static class Builder {
 
 		private String namespace, url, method, username, password;
 		private Map<String, Object> params = new HashMap<>();
@@ -274,20 +311,31 @@ public class XMLite implements AutoCloseable {
 				reqStream.flush();
 			}
 
-			InputStream is = urlConnection.getInputStream();
-			InputStreamReader isr = new InputStreamReader(is);
+			if (urlConnection.getResponseCode() == 200) {
+				// get response
+				InputStreamReader isr = new InputStreamReader(urlConnection.getInputStream());
+				int numCharsRead;
+				char[] charArray = new char[1024];
+				StringBuffer sb = new StringBuffer();
+				while ((numCharsRead = isr.read(charArray)) > 0)
+					sb.append(charArray, 0, numCharsRead);
 
-			int numCharsRead;
-			char[] charArray = new char[1024];
-			StringBuffer sb = new StringBuffer();
-			while ((numCharsRead = isr.read(charArray)) > 0) {
-				sb.append(charArray, 0, numCharsRead);
+				response = sb.toString();
+			} else {
+				/* error from server */
+				InputStreamReader isr = new InputStreamReader(urlConnection.getErrorStream());
+				int numCharsRead;
+				char[] charArray = new char[1024];
+				StringBuffer sb = new StringBuffer();
+				while ((numCharsRead = isr.read(charArray)) > 0)
+					sb.append(charArray, 0, numCharsRead);
+
+				response = sb.toString();
 			}
-
-			response = sb.toString();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 		return this;
 	}
 

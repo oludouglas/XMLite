@@ -1,0 +1,56 @@
+<!-- Ksoap request Non dotnet 1.0 -->
+<v:Envelope xmlns:i="http://www.w3.org/1999/XMLSchema-instance"
+	xmlns:d="http://www.w3.org/1999/XMLSchema" xmlns:c="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:v="http://schemas.xmlsoap.org/soap/envelope/">
+	<v:Header />
+	<v:Body>
+		<n0:getCreds id="o0" c:root="1"
+			xmlns:n0="http://wazalendo.neptunesoftwareplc.com/">
+			<yourname>Douglas</yourname>
+		</n0:getCreds>
+	</v:Body>
+</v:Envelope>
+
+
+<v:Envelope xmlns:i="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:d="http://www.w3.org/2001/XMLSchema" xmlns:c="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:v="http://schemas.xmlsoap.org/soap/envelope/">
+	<v:Header />
+	<v:Body>
+		<n0:getCreds id="o0" c:root="1"
+			xmlns:n0="http://wazalendo.neptunesoftwareplc.com/">
+			<yourname>Douglas</yourname>
+		</n0:getCreds>
+	</v:Body>
+</v:Envelope>
+
+
+
+<!-- XMLite request Non dotnet 1.0 -->
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<v:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/1999/XMLSchema-instance">
+	<soap:Body>
+		<n0:getCustomerDetailsByAccountNumber
+			xmlns:n0="http://wazalendo.neptunesoftwareplc.com/">
+			<vPwd>secret</vPwd>
+			<acctNo>011020000001</acctNo>
+			<vCode>neptune</vCode>
+		</n0:getCustomerDetailsByAccountNumber>
+	</soap:Body>
+</v:Envelope>
+
+
+
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+	<soap:Body>
+		<soap:Fault>
+			<faultcode>soap:Server</faultcode>
+			<faultstring>The given SOAPAction http://wazalendo.neptunesoftwareplc.com/getCreds does not match an operation.</faultstring>
+		</soap:Fault>
+	</soap:Body>
+</soap:Envelope>
+
+
+
